@@ -45,6 +45,15 @@ Draw a regression line through this jittered data using `geom_smooth()`.
 
 Discuss whether a linear regression is appropriate for this. Is there a possibility of model predicting greater than 1 or less than 0 probability for `dvote`?
 
+```{r}
+summary(nes)
+ggplot(nes, aes(income, dvote)) +
+  geom_jitter() +
+  geom_smooth(method = 'lm')
+
+```
+
+A linear regression is not appropriate because the variable dvote should only take on the values 0 or 1- not any more or less.
 
 # Scene 2
 
@@ -62,7 +71,22 @@ Explain to your non-mathematical boss the relationship between income and prefer
 
 Optional (very hard!): Interpret the `estimate` for (Intercept). What does it mean? Think back to how we interpreted regression intercepts in the last two weeks. You *might* need to use the `qlogis()` function.
 
+```{r}
+log_model <- glm(dvote ~ income + gender, family = 'binomial', data = nes)
 
+log_model %>% 
+  tidy(conf.int = T) %>% 
+  select(term, estimate, conf.low, conf.high)
+```
+
+Since the model is logistic, the coefficients cannot be interpreted directly. The average treatment effect can be estimated by dividing the coefficient by four, the "divide by four" rule. The average treatment effect for gendermale is about -0.04, and the effect for income is -0.072. This means that for two voters who are otherwise equal, the probability that the male candidate votes for the Democrat is ~0.04 (about 4%) lower than the probability the female voter votes for the Democrat. The income effect means that for a one-level increase in income bracket, the probability of voting for a Democrat decreases by ~0.072, about 7%.
+
+
+Bayesian interpretation: 
+The probability that the true coefficient is between the bounds of the confidence interval is 0.95. 
+
+Frequentist intepretation:
+If this model were run a large number of times, the coefficient estimate would fall within the bounds of the confidence interval 95% of the time.
 
 
 # Scene 3
@@ -75,6 +99,9 @@ What does the `.fitted` column means?
 
 Why does `.fitted` have the same value for every male with income = 3? (First, show that this is in fact true. Then explain why?)
 
+```{r}
+augment(log_model, type.predict = 'response')
+```
 
 
 # Scene 4
